@@ -1,0 +1,359 @@
+---
+layout: post
+title:  "TEST!"
+date:   2025-11-24 15:39:06 -0500
+categories: jekyll update
+---
+
+# Poolseq Pipeline (Variant Calling)
+Graham McLaughlin
+
+This repo contains all documentation, variant calling metrics, and
+ready-to-use scripts as it relates to calling variants, filtering called
+variants, and generating outfiles for use in the ‘analysis’ repo. All
+final form outfiles can be found in the Hollis-share drive at
+`/experimental_reinforcement/outfiles`.
+
+# Variant Calling
+
+`mpileup_bcftools_ARRAYED.sh` performs joint variant calling on BAM
+files in parallel separately for each genomic region specified by the
+“`regions`” variable list defined within the script:
+
+`regions=("2L" "2R" "3R" "3L" "4" "X" "Y" "rDNA" "mitochondrion_genome")`
+
+by executing `sbatch --array [0-x] mpileup_bcftools_ARRAYED.sh` where
+`x` is the number of chromosomes in the file - 1. In this case it would
+be `[0-8]` or equivalent inclusive command would be `--array=1-9`. The
+script performs the following actions:
+
+- Invokes `bcftools mpileup`
+  (<https://samtools.github.io/bcftools/bcftools.html>) on a single
+  chromosomal region (`--region`). Produces a multi-sample pileup file
+  (mpileup), a binary file type that contains information about base
+  calls and quality scores for many samples at each position in the
+  genome, in this case for every file with the `.bam` file extension
+  contained in the `BAMs` directory.
+
+  - the `-a` command appends specific tags with additional information
+    to each position. The important one for our purposes is the `AD` tag
+    which gives allelic depth:
+
+    - `FORMAT/AD`: outputs the number of each allele per locus for each
+      sample.
+
+    - `INFO` provides total `AD` across all samples.
+
+  - regions with mapping quality (MQ) less than 40 and base quality (BQ)
+    less than 30 are removed as recommended by (Kofler et al. 2016).
+
+- The mpileup file is then parsed by `bcftools call` to call variants at
+  each position, converiting the mpileup file into a VCF (Variant Call
+  Format) file.
+
+## Further `VCF` manipulation
+
+`filter_vcf.sh` produces variant-only, invariant-only, and all-site
+consensus `VCF` files for each unfiltered chromosomal `VCF` separately
+(for computational efficiency) which is then combined into an all-site
+consensus `VCF` using `concat_vcf.sh`. `filter_vcf.sh` removes INDELS
+and provides additional quality filtering by removing sites that only
+don’t meet a minimum `QUAL` score of 20 - meaning the caller has 99%
+confidence that the variant is not an error (1% probability of an
+error).
+
+`get_allele_counts.sh` uses `bcftools query` to parse a VCF an output a
+text file containing columns with chromosome (CHROM), reference position
+(REF), reference allele (REF), alternate allele (ALT), and the counts of
+the REF and ALT for each delimited by a `,`. This allele count text file
+can be reshaped into wide format with the custom
+`reshape_allele_counts.py` script and fed into
+`allele_counts_to_allele_frequencies.R` to calculate allele frequencies.
+
+# Filters Applied
+
+1)  `nuclear_unfiltered_allsites.vcf.gz` was first filtered by only
+    retaining sites with `QUAL > 20`, `MQ > 40`, and `BQ > 30` (BQ and
+    MAQ were applied at the mapping step) to ensure only true biallelic
+    SNP variants are kept in `nuclear_filtered_SNPs.vcf.gz`.
+
+    1)  SNPs before filtering: **1,262,291 -**
+        `nuclear_unfiltered_allsites.vcf.gz`
+
+    2)  SNPs removed: 34,556
+
+    3)  SNPs retained: **1,227,735 →** `nuclear_filtered_SNPs.vcf.gz`
+
+2)  `nuclear_filtered_SNPs.vcf.gz` was converted to a file containing
+    only allele counts, `nuclear_filtered_SNPs_allele_counts.csv.gz`,
+    and further filtered by read depth and allele frequency with
+    `allele_counts_to_frequencies.R`:
+
+    1)  SNPs before filtering: **1,227,735**
+
+        1)  Removed **10,688** sites that mapped to the Y chromosome
+            since we only sequenced females.
+
+        2)  Removed **175,440** sites that only varied from the
+            reference
+
+        3)  Removed **10,421** sites with excessive depth in the top 1%
+            of the depth distribution
+
+            1)  (**9,075** from the **906,728** autosomal SNPs and
+                **1,346** from the **133,126** X chromosomal SNPs)
+
+        4)  Removed **287** and **131** sites that mapped to rDNA and
+            the mitochondrial genome, respectively. These regions had
+            non-normal depth distributions and were therefore filtered
+            out completely.
+
+        5)  Removed **105,149** sites with low read depth (defined as at
+            least one sample having fewer than 20 reads) in the
+            ancestral populations (IV or LHmgfp).
+
+            1)  Removed an additional **22,783** sites that despite
+                removing lowly covered alleles in the ancestral, had at
+                least one sample of the evolved populations with less 20
+                reads.
+
+        6)  Removed **162,525** sites where the minor allele was
+            exceptionally rare in the ancestral populations (defined as
+            less than 4 reads across all ancestral samples).
+
+        7)  Removed **3,752** sites where the minor allele frequency
+            estimates between sequencing replicates greatly differed
+            defined as a SD of \> 0.25.
+
+    2)  Total SNPs removed: **491,169**
+
+    3)  SNPs retained: **736,566 →** `read_counts_long_seqreps.txt`
+
+# Raw and Intermediate VCF Files:
+
+All files can be found on the hollis-share and are summarized below:
+
+<table style="width:99%;">
+<caption>Files only includes reads mapped to the major genomic regions
+of the <em>Drosophila melanogaster</em> reference genome: chromosomes
+2L, 2R, 3L, 3R, 4, X, Y, the mitochondrion genome, and ribosomal DNA.
+All files are gzipped.</caption>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 10%" />
+<col style="width: 33%" />
+<col style="width: 18%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Filetype</th>
+<th>Contents</th>
+<th>Metrics</th>
+<th>Pipeline</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nuclear_un filtered_allsites.vcf.gz</code></td>
+<td>Variant Call Format (VCF)</td>
+<td>All invariant sites in addition to all variant sites (SNPs + INDELS)
+before quality filtering</td>
+<td>Number of SNPs: <strong>1,262,291</strong> (includes multi allelic
+sites)</td>
+<td><code>mpileup_bcftools_ARRAYED.sh</code><strong>→</strong><code>concat_vcf.sh</code></td>
+</tr>
+<tr>
+<td><code>nuclear_filtered_SNPs_and_invariant_vcf.gz</code></td>
+<td>Variant Call Format (VCF)</td>
+<td>All SNP (including multiallelic) sites and invariant sites after
+filtering by QUAL &gt; 20, MQ &gt; 40, and BQ &gt; 30.</td>
+<td></td>
+<td><code>mpileup_bcftools_ARRAYED.sh</code> <strong>→</strong>
+<code>filter_vcf.sh</code> <strong>→</strong>
+<code>concat_vcf.sh</code></td>
+</tr>
+<tr>
+<td><code>nuclear_filtered_SNPs.vcf.gz</code></td>
+<td>Variant Call Format (VCF)</td>
+<td>All SNP (including multiallelic) sites after filtering by QUAL &gt;
+20, MQ &gt; 40, and BQ &gt; 30.</td>
+<td><p>Number of SNPs: <strong>1,227,735</strong></p>
+<p>multi-allelic and low QUAL sites removed</p></td>
+<td><code>mpileup_bcftools_ARRAYED.sh</code> <strong>→</strong>
+<code>filter_vcf.sh</code> <strong>→</strong>
+<code>concat_vcf.sh</code></td>
+</tr>
+<tr>
+<td><code>nuclear_filtered_SNPs_allele_counts.csv.gz</code></td>
+<td>tab-delimited text file (<code>.txt</code>)</td>
+<td>Allele counts for reference and alternative alleles derived from
+<code>nuclear_filtered_SNPs.vcf.gz</code></td>
+<td><p>Number of SNPs: <strong>1,227,735</strong></p>
+<p>multi-allelic and low QUAL sites removed</p></td>
+<td><code>mpileup_bcftools_ARRAYED.sh</code> <strong>→</strong>
+(<code>get_alleles.sh</code> +
+<code>reshape_allele_counts.py</code>)</td>
+</tr>
+</tbody>
+</table>
+
+# Analysis-Ready Allele Count/Frequency Datasets:
+
+<table style="width:99%;">
+<colgroup>
+<col style="width: 1%" />
+<col style="width: 7%" />
+<col style="width: 30%" />
+<col style="width: 27%" />
+<col style="width: 6%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dataset</th>
+<th>File</th>
+<th>Filetype</th>
+<th>Contents</th>
+<th>Contents</th>
+<th>Pipeline</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A</strong></td>
+<td><code>read_counts_long_seqreps.txt</code></td>
+<td>tab-delimited text file (<code>.txt</code>)</td>
+<td>Major and minor allele counts after filtering in long format.
+Contains the separate major and minor counts for both sequencing
+replicates.</td>
+<td>Number of SNPs: <strong>736,566</strong></td>
+<td><code>mpileup_bcftools_ARRAYED.sh</code> <strong>→</strong>
+<code>filter_vcf.sh</code> <strong>→</strong> <code>concat_vcf.sh</code>
+<strong>→</strong> (<code>get_alleles.sh</code> + <code>reshape_allele_counts.py</code>) <strong>→</strong>
+<code>allele_counts_to_allele_frequencies.R</code></td>
+</tr>
+<tr>
+<td>B</td>
+<td><code>read_counts_long_seqreps.txt</code></td>
+<td>tab-delimited text file (<code>.txt</code>)</td>
+<td>Minor allele frequencies after filtering. In long format. Contains
+MAFs for both sequencing replicates.</td>
+<td>Number of SNPs: <strong>736,566</strong></td>
+<td><code>mpileup_bcftools_ARRAYED.sh</code> <strong>→</strong>
+<code>filter_vcf.sh</code> <strong>→</strong> <code>concat_vcf.sh</code>
+<strong>→</strong> (<code>get_alleles.sh</code> + <code>reshape_allele_counts.py</code>) <strong>→</strong>
+<code>allele_counts_to_allele_frequencies.R</code></td>
+</tr>
+<tr>
+<td>C</td>
+<td><code>mafs_wide_seqreps.txt</code></td>
+<td>tab-delimited text file (<code>.txt</code>)</td>
+<td>Minor allele frequencies after filtering In wide format. Contains
+MAFs for both sequencing replicates.</td>
+<td>Number of SNPs: <strong>736,566</strong></td>
+<td><code>mpileup_bcftools_ARRAYED.sh</code> <strong>→</strong>
+<code>filter_vcf.sh</code> <strong>→</strong> <code>concat_vcf.sh</code>
+<strong>→</strong> (<code>get_alleles.sh</code> + <code>reshape_allele_counts.py</code>) <strong>→</strong>
+<code>allele_counts_to_allele_frequencies.R</code></td>
+</tr>
+<tr>
+<td>D</td>
+<td><code>read_counts_BPformat.txt</code></td>
+<td>read counts formatted according to <code>BayPass</code> sample read
+count data (<code>BayPass</code> <a
+href="https://forgemia.inra.fr/mathieu.gautier/baypass_public/-/blob/master/manual/BayPass_manual.pdf">manual</a>
+Section 2.2.1.2)</td>
+<td>Major and minor allele counts after filtering in long format.
+Sequencing replicate counts have been collapsed into summed counts
+across both replicates for each sample at each site.</td>
+<td>Number of SNPs: <strong>736,566</strong></td>
+<td><code>mpileup_bcftools_ARRAYED.sh</code> <strong>→</strong>
+<code>filter_vcf.sh</code> <strong>→</strong> <code>concat_vcf.sh</code>
+<strong>→</strong> (<code>get_alleles.sh</code> + <code>reshape_allele_counts.py</code>) <strong>→</strong>
+<code>allele_counts_to_allele_frequencies.R</code></td>
+</tr>
+<tr>
+<td>E</td>
+<td><code>grenedalf.counts</code></td>
+<td>allele count table in grenedalf format</td>
+<td>Major and minor allele counts after filtering. Sequencing replicate
+counts have been collapsed into summed counts across both replicates for
+each sample at each site.</td>
+<td>Number of SNPs: <strong>736,566</strong></td>
+<td><code>mpileup_bcftools_ARRAYED.sh</code> <strong>→</strong>
+<code>filter_vcf.sh</code> <strong>→</strong> <code>concat_vcf.sh</code>
+<strong>→</strong> (<code>get_alleles.sh</code> + <code>reshape_allele_counts.py</code>) <strong>→</strong>
+<code>allele_counts_to_allele_frequencies.R</code></td>
+</tr>
+<tr>
+<td>F</td>
+<td><code>nuclear_filtered_invariantAndSNPs_718.vcf.gz</code></td>
+<td>Variant Call Format (VCF)</td>
+<td>Contains only SNPs after filtering conducted using
+<code>allele_counts_to_allele_frequencies.R</code></td>
+<td><p>Number of SNPs: <strong>740,318</strong></p>
+<p>Number of Invariant Sites: <strong>125,077,894</strong></p>
+<p>multi-allelic and low QUAL sites removed</p></td>
+<td><code>mpileup_bcftools_ARRAYED.sh</code> <strong>→</strong>
+<code>filter_vcf.sh</code> <strong>→</strong>
+<code>allele_counts_to_allele_frequencies.R</code> <strong>→</strong>
+<code>subset_vcf.sh</code></td>
+</tr>
+</tbody>
+</table>
+
+## POTENTIAL MODIFICATION/ADDITIONS
+
+- Call SNPs with
+  `FreeBayes freebayes-parallel (version 1.2.0-2-g29c4002; --min-alternate-count 2, --min-coverage 5, --min-alternate-fraction 0.01, --min-base-quality 40 --pooled-continuous`
+  as done in (Burny et al. 2020). Also see that pub for triple-mapping
+  procedure.
+
+- Remove SNPs within 5bp of an INDEL: `BCFtools -g 5`
+
+- mask snps found in repeated regions:
+  `BEDtools intersect -v -wa -header`
+
+- Go ahead and filter by coverage here by:
+
+  - `bcftools filter -i`
+
+    - `SAF > 0 && SAR > 0 && SRF > 0 && SRR > 0`: Ensure at least one
+      supporting read for each condition (alt/ref, forward/reverse).
+
+      `RPR > 0 && RPL > 0`: Ensure at least one read pair on the right
+      and left.
+
+      `(SAF + SAR + SRF + SRR) > 4`: Total supporting reads \> 4.
+
+      `(SAF + SAR + SRF + SRR) < threshold`: Exclude positions exceeding
+      the threshold for high-quality reads.
+
+## References
+
+<div id="refs" class="references csl-bib-body hanging-indent"
+entry-spacing="0">
+
+<div id="ref-burny2020" class="csl-entry">
+
+Burny, Claire, Viola Nolte, Pierre Nouhaud, Marlies Dolezal, and
+Christian Schlötterer. 2020. “Secondary Evolve and Resequencing: An
+Experimental Confirmation of Putative Selection Targets Without
+Phenotyping.” *Genome Biology and Evolution* 12 (3): 151–59.
+<https://doi.org/10.1093/gbe/evaa036>.
+
+</div>
+
+<div id="ref-kofler2016" class="csl-entry">
+
+Kofler, Robert, Anna Maria Langmüller, Pierre Nouhaud, Kathrin Anna
+Otte, and Christian Schlötterer. 2016. “Suitability of Different Mapping
+Algorithms for Genome-Wide Polymorphism Scans with Pool-Seq Data.” *G3
+Genes\|Genomes\|Genetics* 6 (11): 3507–15.
+<https://doi.org/10.1534/g3.116.034488>.
+
+</div>
+
+</div>
