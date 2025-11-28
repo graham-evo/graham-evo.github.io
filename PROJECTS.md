@@ -4,8 +4,6 @@ title: "Projects"
 permalink: /projects/
 ---
 
-# Projects
-
 <details>
   <summary>Reinforcement in Drosophila</summary>
   <ul>
@@ -26,4 +24,6 @@ permalink: /projects/
     <li><a href="/projects/biogeobears/">View project page</a></li>
   </ul>
 </details>
+
+<!-- Navbar -->
 

@@ -2,7 +2,7 @@
 # Feel free to add content and custom Front Matter to this file.
 # To modify the layout, see https://jekyllrb.com/docs/themes/#overriding-theme-defaults
 
-layout: home
+layout: page
 ---
 
 I’m an evolutionary biologist interested in how biodiversity, and especially genetic diversity, arises and persists. My work sits at the intersection of several branches of evolutionary genetics,  complementing comparative genomics of natural populations with experimentally evolved laboratory populations to better understand the processes that drive large-scale evolutionary change.
