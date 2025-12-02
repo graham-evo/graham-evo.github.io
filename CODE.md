@@ -1,9 +1,9 @@
 ---
-title: Miscellaneous Tutorials
+title: Code
 layout: page
 permalink: /code/
 ---
 
 <ul>
-   <li><a href="/code/mapshareddrive/">Mapping a shared drive</a></li>
+   <li><a href="/code/copy_from_shared_drive/">Copy From Mapped Drive</a></li>
 </ul>
