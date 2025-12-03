@@ -11,3 +11,6 @@ permalink: /coding_tutorials/
 </ul>
 <h3>Bioinformatics</h3>
 <h3>Population Genetics</h3>
+<h3>Statistics</h>
+   <li><a href="/coding_tutorials/multiple_testing/">Multiple Testing (Omics Scale Data)</a></li>
+   
