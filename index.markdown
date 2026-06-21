@@ -11,5 +11,5 @@ I’m an evolutionary biologist interested in how biodiversity, and especially g
 
 Since computational techniques are key to my work, I am indebted to the wonderfully generous evolutionary biologists and bioinformaticians who have produced and made available numerous tools and tutorials. I have made a special section of this website with a directory of these resources as well as some tutorials I've produced myself to help future students of evolutionary genetics.
 
-[CV: Updated May 2025](/documents/GrahamCV_June2026.pdf)
+[CV: Updated June 2026](/documents/GrahamCV_June2026.pdf)
 
