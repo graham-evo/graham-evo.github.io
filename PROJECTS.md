@@ -1,8 +1,16 @@
 ---
 layout: page
-title: "Projects"
+title: "Project Portfolio"
 permalink: /projects/
 ---
+
+<details>
+  <summary>
+    <summary>RFID Race Timing</summary>
+  <ul>
+    <li><a> href="/projects/raceTimingPortfolio/">View project page</a></li>
+  <ul>
+</details>
 
 <details>
   <summary>Reinforcement in Drosophila</summary>

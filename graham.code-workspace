@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../UofSC/Hollis Lab/Projects/Reinforcement Project/R/Experimental Reinforcement"
+		},
+		{
+			"path": "../../UofSC/Hollis Lab/Projects/galapagos_projects/galapagos_geogenomics"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "graham-evo.github.io"
+	}
+}
