@@ -21,11 +21,11 @@
 title: Graham C. McLaughlin - Data-driven Solutions
 email: grahamchristianmcl@outlook.com
 description: >- # this means to ignore newlines until "baseurl:"
- Graham C. McLaughlin's Personal Website
+  Graham C. McLaughlin's Personal Website
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: GrahamMclaugh18
-github_username:  graham-evo
+github_username: graham-evo
 
 # Build settings
 theme: minima
@@ -51,7 +51,7 @@ plugins:
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
-include:
-- _assets
-custom_css:
-- assets/css/custom.css
+#include:
+#- _assets
+#custom_css:
+#  - assets/css/custom.css

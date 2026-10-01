@@ -7,8 +7,8 @@ permalink: /resume/
 <p align="center"><strong>GRAHAM C. M<span style="font-size: 0.75em; vertical-align: 0.0em;">C</span>LAUGHLIN</strong><br>email: <a href="mailto:grahamchristianmcl@outlook.com">grahamchristianmcl@outlook.com</a><br>alt email: <a href="mailto:grahamcm@email.sc.edu">grahamcm@email.sc.edu</a><br>cell: (704)-999-7628</p>
 
 **<u>Education</u>**<br>
-**2027**&nbsp;&nbsp;&nbsp;&nbsp;**Ph.D., Population Genetics/Genomics, University o<a href="/professional_references/#kristen-hogan">South Carolina**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;"Island populations clarify the tension between gene flow and diversification"\
+**2027**&nbsp;&nbsp;&nbsp;&nbsp;**Ph.D., Population Genetics/Genomics, University of South Carolina**<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"Whole-genome DNA sequence data clarifies the tension between gene flow and diversification in island systems"\
 **2022**&nbsp;&nbsp;&nbsp;&nbsp;**B.S., Biology, _magna cum laude_, University of South Carolina**
 
 **<u>Professional Experience</u>**<br>
