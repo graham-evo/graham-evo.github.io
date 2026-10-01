@@ -1,0 +1,63 @@
+---
+---
+
+/* Load the base Minima theme first, then override below. */
+@import "minima";
+
+body {
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 1.0em;
+  line-height: 1.6em;
+}
+
+/* Header container (top bar) */
+.site-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #c3c0c0;
+  color: #000000;
+}
+
+/* Site title text in the header */
+.site-title {
+  font-family: "Baskerville", "Libre Baskerville", "Times New Roman", serif;
+  font-weight: bold;
+  text-align: center;
+  display: block;
+  width: 100%;
+}
+
+/* Navigation layout + active page styling */
+.site-nav {
+  text-align: center;
+  margin-top: em;
+
+  /* Active page is set in header.html via .active / aria-current="page" */
+  a[aria-current="page"],
+  a.active {
+    color: black;
+    text-decoration: underline;
+    text-decoration-color: black;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 0.1em;
+  }
+}
+
+/* Base styles for nav links */
+.site-nav .page-link {
+  display: inline-block;
+  margin: 0 1em;
+  padding: 0em 0em;
+  text-decoration: none;
+  color: #000000;
+}
+
+/* Active-page icon (image) that appears next to the current link */
+.site-nav .page-link .active-icon {
+  display: inline-block;
+  margin-right: 0em;
+  width: 1em;
+  height: 1em;
+  background-color: white;
+  border-radius: 50%;
+}

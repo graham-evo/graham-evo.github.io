@@ -3,9 +3,11 @@ title:
 layout: page
 permalink: /coding_tutorials/cli/
 nav_exclude: true
+author: Graham C. McLaughlin
+date: 2024-06-20 12:00:00 -0400
 ---
 
-## Interfacing with the Computer
+### Interfacing with the computer ###
 **Command-line interpreters, CLIs** are often referred to as 'shells'. These are computer programs that allow the user to directly interact with the computer. These programs are run inside a **terminal**, which creates a text display allowing for the direct input of commands.
 
 On **Linux** and **MacOS** systems the most popular CLIs are unix-based `zsh` and `bash`, which come pre-installed on most Apple computers and are accessible through the **Terminal** application. On MacOS you can open any application - in this case terminal - with `⌘ + Space`, typing *terminal*, and pressing `enter`.
