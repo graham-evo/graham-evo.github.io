@@ -2,6 +2,20 @@
 title: "Project Portfolio"
 permalink: /projects/
 ---
+<div class="projects-grid">
+  <article class="project-card">
+    <h3 class="project-title">Map of Galápagos Collections</h3>
+    <p class="project-text">This is an interactive map of current insect collections by the team</p>
+    <a href="#" class="project-btn">See Map</a>
+        <img class="project-preview" src="/assets/images/img_projects_map1.png" alt="Preview of Project 1">
+  </article>
+
+  <article class="project-card">
+    <h3 class="project-title">Special title treatment</h3>
+    <p class="project-text">With supporting text below as a natural lead-in to additional content.</p>
+    <a href="#" class="project-btn">Go somewhere</a>
+  </article>
+</div>
 
 <details>
   <summary>

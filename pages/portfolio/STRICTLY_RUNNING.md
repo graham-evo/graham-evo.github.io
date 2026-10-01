@@ -4,9 +4,8 @@ layout: page
 permalink: /projects/raceTimingPortfolio/
 ---
 ### Behind the Scenes of Timing a Road Race ###
-<body>
+
 I've been an avid runner on and off over the years. Personally, the act of physically running is my least favorite part. The best aspect of running is the community that comes along with it. Running is an individual sport that requires nothing more than a decent pair of shoes making it accessible to just about anyone uniting folks from many walks of life. This makes the atmosphere of local road races one of a kind - events that promote exercise, invite a healthy competitive spirit, drive engagement with a diverse group of people, and usually are all in pursuit of raising money for local charities.
-</body>
 
 During my PhD I responded to a local running store's call for part-time race timers (I've always been fascinated with the invisible folks behind the scenes, which explains my long stint as a Camera operator and switchboard operator at my local church throughout high school). Although I'd never really thought much about the technology that allows you to scan that QR code after a race and instantly get a milli-second-level precision finishing time.
 

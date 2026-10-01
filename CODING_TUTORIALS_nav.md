@@ -6,7 +6,7 @@ permalink: /coding_tutorials/
 
 <h4>Computing Basics</h4>
 <ul>
-   <li><a href="/coding_tutorials/cli/">Command-line Interface</a></li>
+   <a href="/coding_tutorials/cli/">Command-line Interface</a>
    <li><a href="/coding_tutorials/scripting/">Scripts and Batch Files</a></li>
 </ul>
 <h4>Bioinformatics</h4>
@@ -17,7 +17,7 @@ permalink: /coding_tutorials/
 </ul>
 <h4>Plotting</h4>
 <ul>
-   <li><a href="/coding_tutorials/manhatten_plots/">Manhatten Plots</a></li>
+   <a href="{{ '/coding_tutorials/manhatten_plots/' | relative_url }}">Manhatten Plots</a>
 </ul>
 <h4>Website Creation</h4>
 <ul>

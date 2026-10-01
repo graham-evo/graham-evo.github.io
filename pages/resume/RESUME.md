@@ -1,14 +1,51 @@
 ---
-layout: page
+layout: default
 title: "Interactive Resume"
 permalink: /resume/
 ---
 
-<p align="center"><strong>GRAHAM C. M<span style="font-size: 0.75em; vertical-align: 0.0em;">C</span>LAUGHLIN</strong><br>email: <a href="mailto:grahamchristianmcl@outlook.com">grahamchristianmcl@outlook.com</a><br>alt email: <a href="mailto:grahamcm@email.sc.edu">grahamcm@email.sc.edu</a><br>cell: (704)-999-7628</p>
-
+<p align="center" style = "font-size: 1em;"><strong>GRAHAM C. M<span style="font-size: 0.75em; vertical-align: 0.0em;">C</span>LAUGHLIN</strong>
+  <br>email: 
+  <a href="mailto:grahamchristianmcl@outlook.com">grahamchristianmcl@outlook.com</a>
+  <!-- For modifying the links and logos of job profiles and docs
+  <br>alt email: 
+  <a href="mailto:grahamcm@email.sc.edu">grahamcm@email.sc.edu</a>
+  -->
+  <br>cell: (704)-999-7628<br>
+<!-- For modifying the links and logos of job profiles and docs -->
+  <a href="_blank" target="_blank" rel="noopener" aria-label="Resume" style="display: inline-flex; align-items: center;">
+    <svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true" style="width:1em;height:1em;fill:currentColor;vertical-align:-0.125em;">
+      <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm0 2.5L18.5 9H14zM8 13h8v1.5H8zm0 3h8v1.5H8zm0-6h5v1.5H8z"/>
+  </svg> Resume PDF
+  </a><br>Also see:<br>
+  <a href="/documents/GrahamCV_June2026.pdf" target="_blank" rel="noopener" aria-label="CV" style="display: inline-flex; align-items: center;">
+    <svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true" style="width:1em;height:1em;fill:currentColor;vertical-align:-0.125em;">
+      <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm0 2.5L18.5 9H14zM8 13h8v1.5H8zm0 3h8v1.5H8zm0-6h5v1.5H8z"/>
+  </svg> CV
+  </a>
+  |
+  <a href="https://www.linkedin.com/in/graham-mclaughlin-02968b194" target="_blank" rel="noopener" aria-label="LinkedIn" style="display: inline-flex; align-items: center;">
+    <svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true" style="width:1em;height:em;fill:currentColor;vertical-align:0em;">
+      <path fill="currentColor" d="M6.94 8.5a1.72 1.72 0 1 1 0-3.44a1.72 1.72 0 0 1 0 3.44M5.5 9.75h2.88V19H5.5zm4.56 0h2.76v1.26h.04c.38-.73 1.33-1.5 2.74-1.5c2.93 0 3.47 1.93 3.47 4.44V19h-2.88v-4.45c0-1.06-.02-2.42-1.48-2.42c-1.48 0-1.7 1.16-1.7 2.34V19h-2.95z"/>
+  </svg> LinkedIn
+  </a>
+  |
+    <a href="https://github.com/graham-evo" target="_blank" rel="noopener" aria-label="LinkedIn" style="display: inline-flex; align-items: center;">
+    <svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true" style="width:1em;height:1em;fill:currentColor;vertical-align:-0.125em;">
+      <path fill="currentColor" d="M12 .5A11.5 11.5 0 0 0 .5 12.1c0 5.11 3.31 9.45 7.9 10.98c.58.11.79-.25.79-.56v-1.97c-3.22.71-3.9-1.4-3.9-1.4c-.53-1.37-1.29-1.74-1.29-1.74c-1.06-.73.08-.72.08-.72c1.17.08 1.78 1.22 1.78 1.22c1.04 1.8 2.73 1.28 3.39.98c.1-.77.41-1.29.74-1.59c-2.57-.3-5.27-1.3-5.27-5.78c0-1.28.45-2.33 1.2-3.15c-.12-.3-.52-1.53.12-3.19c0 0 .98-.32 3.2 1.2a10.9 10.9 0 0 1 5.82 0c2.22-1.52 3.2-1.2 3.2-1.2c.64 1.66.24 2.89.12 3.19c.75.82 1.2 1.87 1.2 3.15c0 4.49-2.7 5.47-5.28 5.77c.42.36.79 1.08.79 2.18v3.23c0 .31.21.68.8.56a11.6 11.6 0 0 0 7.9-10.98A11.5 11.5 0 0 0 12 .5"/>
+  </svg> Github
+  </a>
+  |
+  <a href="https://scholar.google.com/citations?user=gtlAkhsAAAAJ&hl=en" target="_blank" rel="noopener" aria-label="Google Scholar" style="display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;">
+  <svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true" style="width:1em;height:1em;fill:currentColor;vertical-align:-0.125em;">
+    <path d="M12 3 1 9l11 6 9-4.91V17h2V9L12 3zm0 14L5 13.18V17c0 2.76 3.13 5 7 5s7-2.24 7-5v-3.82L12 17z"/>
+  </svg>
+  Google Scholar
+</a>
+</p>
 **<u>Education</u>**<br>
 **2027**&nbsp;&nbsp;&nbsp;&nbsp;**Ph.D., Population Genetics/Genomics, University of South Carolina**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;"Whole-genome DNA sequence data clarifies the tension between gene flow and diversification in island systems"\
+&nbsp;&nbsp;&nbsp;&nbsp;"Whole-genome DNA sequence data clarifies the tension between gene flow and diversification in real and synthetic island systems"\
 **2022**&nbsp;&nbsp;&nbsp;&nbsp;**B.S., Biology, _magna cum laude_, University of South Carolina**
 
 **<u>Professional Experience</u>**<br>
