@@ -6,7 +6,7 @@ permalink: /projects/
   <article class="project-card">
     <h3 class="project-title">Map of Galápagos Collections</h3>
     <p class="project-text">This is an interactive map of current insect collections by the team</p>
-    <a href="#" class="project-btn">See Map</a>
+    <a href="/projects/galapagos_map" class="project-btn">See Map</a>
         <img class="project-preview" src="/assets/images/img_projects_map1.png" alt="Preview of Project 1">
   </article>
 
