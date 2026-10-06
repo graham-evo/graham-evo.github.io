@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Strictly Running Course Map Builder</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root { --brand:black; --paper:white; --line:white; --ink:#222; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Arial,Helvetica,sans-serif; }
+    header { padding:24px max(18px,calc((100vw - 1220px)/2)); background:#fff; border-bottom:5px solid var(--brand); }
+    h1 { margin:0 0 6px; color:var(--brand); font-size:clamp(1.55rem,3vw,2.2rem); }
+    header p { margin:0; color:#555; }
+    .layout { display:grid; grid-template-columns:360px minmax(0,1fr); gap:20px; max-width:1220px; margin:0 auto; padding:20px 18px 36px; }
+    .panel,.map-card { background:#fff; border:1px solid var(--line); border-radius:5px; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+    .panel { padding:18px; align-self:start; }
+    h2 { margin:0 0 12px; color:var(--brand); font-size:1.15rem; }
+    h3 { margin:18px 0 8px; padding-top:17px; border-top:1px solid #eadfd8; font-size:1rem; }
+    label { display:block; margin:0 0 5px; font-size:.88rem; font-weight:bold; }
+    input,textarea,select { width:100%; margin:0 0 12px; padding:9px 10px; border:1px solid #b9aaa0; border-radius:3px; background:#fff; font:inherit; font-size:.93rem; }
+    textarea { min-height:66px; resize:vertical; }
+    input[type=color] { height:40px; padding:3px; }
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    button { border:0; border-radius:3px; padding:10px 13px; background:var(--brand); color:#fff; cursor:pointer; font-weight:bold; }
+    button.secondary { background:#645a55; } button.small { padding:6px 8px; font-size:.78rem; }
+    .button-row { display:flex; flex-wrap:wrap; gap:8px; } .download { width:100%; margin-top:4px; padding:13px; }
+    .help,.status { margin:0 0 12px; color:#5a514d; font-size:.84rem; line-height:1.4; }
+    .status { padding:9px 10px; background:#f5ece7; border-left:3px solid var(--brand); }
+    .status.success { background:#edf5ed; border-color:#3a7d44; }
+    .map-card { overflow:hidden; } #map { height:min(70vh,680px); min-height:450px; }
+    .map-footer { padding:12px 15px; color:#554d48; font-size:.9rem; }
+    .marker-list { margin:0; padding:0; list-style:none; } .marker-list li { display:flex; justify-content:space-between; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid #eee5df; font-size:.85rem; }
+    .marker-list small { display:block; color:#6a625e; margin-top:2px; } .empty { color:#777; font-size:.85rem; }
+    .mile-marker,.endpoint-marker { display:flex; align-items:center; justify-content:center; border:2px solid #fff; border-radius:50%; color:#fff; box-shadow:0 1px 4px rgba(0,0,0,.45); font:bold 12px Arial,sans-serif; }
+    .mile-marker { width:28px; height:28px; background:#fff; border-color:var(--brand); color:var(--brand); }
+    .endpoint-marker { width:32px; height:32px; font-size:15px; }
+    @media(max-width:850px){.layout{grid-template-columns:1fr}.panel{order:2}#map{height:60vh;min-height:380px}}
+  </style>
+</head>
+<body>
+  <header><h1>Strictly Running Course Map Builder</h1><p>Upload a GPX route, add custom locations, and download an upload-ready interactive course map.</p></header>
+  <main class="layout">
+    <aside class="panel">
+      <h2>1. Course details</h2>
+      <label for="gpx-file">GPX route file</label><input id="gpx-file" type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml">
+      <p class="help">MapMyRun: Download → GPX.</p>
+      <label for="event-name">Race/event name</label><input id="event-name" value="My Race">
+      <label for="course-name">Course name</label><input id="course-name" value="5K Course">
+      <label for="route-color">Route color</label><input id="route-color" type="color" value="#b70a0a">
+      <div class="button-row"><button id="refresh-map" type="button">Update preview</button><button id="clear-markers" class="secondary" type="button">Clear custom markers</button></div>
+      <h3>2. Course information</h3>
+      <label for="certificate-number">USATF certificate number</label><input id="certificate-number" placeholder="e.g., SC24012BW">
+      <label for="effective-dates">Certificate effective dates</label><input id="effective-dates" placeholder="e.g., January 1, 2024–December 31, 2034">
+      <label for="measurement-date">Measurement date</label><input id="measurement-date" placeholder="e.g., November 10, 2023">
+      <label for="certifier">Certifier</label><input id="certifier" placeholder="Name and certification, if applicable">
+      <label for="measurement-points">Measurement points</label><textarea id="measurement-points" placeholder="One per line: Start | Exact location description&#10;Mile 1 | Exact location description&#10;Finish | Exact location description"></textarea>
+      <div class="two-col"><div><label for="elevation-start">Start elevation</label><input id="elevation-start" placeholder="e.g., 312 ft"></div><div><label for="elevation-finish">Finish elevation</label><input id="elevation-finish" placeholder="e.g., 312 ft"></div></div>
+      <div class="two-col"><div><label for="elevation-highest">Highest elevation</label><input id="elevation-highest" placeholder="e.g., 356 ft"></div><div><label for="elevation-lowest">Lowest elevation</label><input id="elevation-lowest" placeholder="e.g., 298 ft"></div></div>
+      <label for="course-notes">Notes &amp; restrictions</label><textarea id="course-notes" placeholder="One note or restriction per line"></textarea>
+      <h3>3. Add a custom marker</h3>
+      <p class="help">Start, finish, and whole-mile marks are automatic. Click the map for a custom location.</p>
+      <label for="marker-type">Marker type</label>
+      <select id="marker-type"><option value="📍">General location</option><option value="💧">Water stop</option><option value="P">Parking</option><option value="🚻">Restroom</option><option value="⚠">Caution / road closure</option></select>
+      <label for="marker-name">Marker label</label><input id="marker-name" placeholder="e.g., Packet pickup">
+      <label for="marker-description">Short description <span style="font-weight:normal">(optional)</span></label><textarea id="marker-description" placeholder="e.g., Opens at 6:30 a.m."></textarea>
+      <div class="two-col"><div><label for="marker-lat">Latitude</label><input id="marker-lat" type="number" step="any" placeholder="Click map"></div><div><label for="marker-lng">Longitude</label><input id="marker-lng" type="number" step="any" placeholder="Click map"></div></div>
+      <button id="add-marker" type="button">Add marker</button>
+      <h3>Custom markers</h3><ul id="marker-list" class="marker-list"><li class="empty">No custom markers added yet.</li></ul>
+      <h3>4. Download</h3><p id="status" class="status">Choose a GPX route to begin.</p><button id="download" class="download" type="button">Download course-map ZIP</button>
+    </aside>
+    <section class="map-card"><div id="map"></div><div class="map-footer" id="distance">No route loaded</div></section>
+  </main>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    (() => {
+      const $ = id => document.getElementById(id);
+      const state = { gpxText:null, route:[], markers:[], routeLayer:null, autoLayers:[], customLayers:[] };
+      const map = L.map('map').setView([34, -81], 8);
+      const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'&copy; OpenStreetMap contributors'});
+      const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {maxZoom:17, opacity:.6, attribution:'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap'});
+      const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, attribution:'Tiles &copy; Esri'});
+      street.addTo(map); L.control.layers({Streets:street, Topographic:topo, Satellite:satellite}).addTo(map); L.control.scale().addTo(map);
+      const esc = v => String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+      const setStatus = (text, ok=false) => { $('status').textContent=text; $('status').classList.toggle('success',ok); };
+      const haversine = (a,b) => { const r=6371000,k=Math.PI/180,x=(b[0]-a[0])*k,y=(b[1]-a[1])*k,h=Math.sin(x/2)**2+Math.cos(a[0]*k)*Math.cos(b[0]*k)*Math.sin(y/2)**2; return 2*r*Math.asin(Math.sqrt(h)); };
+      const routeDistance = points => points.slice(1).reduce((sum,p,i) => sum+haversine(points[i],p),0);
+      const endpointIcon = (symbol,color) => L.divIcon({className:'',html:`<div class="endpoint-marker" style="background:${color}">${symbol}</div>`,iconSize:[32,32],iconAnchor:[16,16],popupAnchor:[0,-17]});
+      const customIcon = symbol => L.divIcon({className:'',html:`<div class="endpoint-marker" style="background:${$('route-color').value}">${esc(symbol)}</div>`,iconSize:[32,32],iconAnchor:[16,16],popupAnchor:[0,-17]});
+      const mileIcon = mile => L.divIcon({className:'',html:`<div class="mile-marker">${mile}</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-15]});
+      function pointAtDistance(points,target) { let travelled=0; for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],segment=haversine(a,b);if(travelled+segment>=target){const f=(target-travelled)/segment;return[a[0]+f*(b[0]-a[0]),a[1]+f*(b[1]-a[1])]} travelled+=segment} return null; }
+      function automaticLayers(points) {
+        const layers=[], start=points[0], finish=points.at(-1);
+        if(haversine(start,finish)<20) layers.push(L.marker(start,{icon:endpointIcon('★','#333')}).addTo(map).bindPopup('<strong>Start / Finish</strong>'));
+        else { layers.push(L.marker(start,{icon:endpointIcon('▶','#2e7d32')}).addTo(map).bindPopup('<strong>Start</strong>')); layers.push(L.marker(finish,{icon:endpointIcon('■','#111')}).addTo(map).bindPopup('<strong>Finish</strong>')); }
+        const miles=Math.floor(routeDistance(points)/1609.344);
+        for(let mile=1;mile<=miles;mile++){const spot=pointAtDistance(points,mile*1609.344);if(spot)layers.push(L.marker(spot,{icon:mileIcon(mile)}).addTo(map).bindPopup(`<strong>Mile ${mile}</strong>`));}
+        return layers;
+      }
+      function clearLayers(layers) { layers.forEach(layer=>map.removeLayer(layer)); return []; }
+      function updateMap(fit=true) {
+        if(state.routeLayer)map.removeLayer(state.routeLayer); state.autoLayers=clearLayers(state.autoLayers); state.customLayers=clearLayers(state.customLayers);
+        if(state.route.length>1){state.routeLayer=L.polyline(state.route,{color:$('route-color').value,weight:6,opacity:.9,lineJoin:'round'}).addTo(map);state.autoLayers=automaticLayers(state.route);if(fit)map.fitBounds(state.routeLayer.getBounds(),{padding:[28,28]});$('distance').textContent=`Route distance: ${(routeDistance(state.route)/1609.344).toFixed(2)} mi`;}
+        state.markers.forEach(m=>state.customLayers.push(L.marker(m.coordinates,{icon:customIcon(m.symbol)}).addTo(map).bindPopup(`<strong>${esc(m.name)}</strong>${m.description ? `<br>${esc(m.description)}` : ''}`)));
+      }
+      function renderMarkerList(){const list=$('marker-list');list.innerHTML='';if(!state.markers.length){list.innerHTML='<li class="empty">No custom markers added yet.</li>';return}state.markers.forEach((m,i)=>{const li=document.createElement('li');li.innerHTML=`<span>${esc(m.symbol)} <strong>${esc(m.name)}</strong><small>${m.coordinates[0].toFixed(5)}, ${m.coordinates[1].toFixed(5)}</small></span>`;const b=document.createElement('button');b.className='small secondary';b.textContent='Remove';b.onclick=()=>{state.markers.splice(i,1);renderMarkerList();updateMap(false)};li.appendChild(b);list.appendChild(li)})}
+      function parseGpx(text){const xml=new DOMParser().parseFromString(text,'application/xml');if(xml.querySelector('parsererror'))throw new Error('This is not a valid GPX file.');const points=[...xml.querySelectorAll('trkpt,rtept')].map(p=>[+p.getAttribute('lat'),+p.getAttribute('lon')]).filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1]));if(points.length<2)throw new Error('No route points were found.');return points}
+      $('gpx-file').addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{state.gpxText=reader.result;state.route=parseGpx(state.gpxText);updateMap();setStatus(`Loaded ${file.name}.`,true)}catch(err){setStatus(err.message)}};reader.readAsText(file)});
+      map.on('click',e=>{$('marker-lat').value=e.latlng.lat.toFixed(6);$('marker-lng').value=e.latlng.lng.toFixed(6);setStatus('Coordinates selected. Add a label, then click Add marker.',true)});
+      $('refresh-map').onclick=()=>updateMap(false); $('clear-markers').onclick=()=>{state.markers=[];renderMarkerList();updateMap(false)};
+      $('add-marker').onclick=()=>{const name=$('marker-name').value.trim(),lat=+$('marker-lat').value,lng=+$('marker-lng').value;if(!name||!Number.isFinite(lat)||!Number.isFinite(lng)){setStatus('Enter a marker label and choose a map location.');return}state.markers.push({name,coordinates:[lat,lng],description:$('marker-description').value.trim(),symbol:$('marker-type').value});$('marker-name').value='';$('marker-description').value='';$('marker-lat').value='';$('marker-lng').value='';renderMarkerList();updateMap(false);setStatus('Marker added.',true)};
+      function publicMapHtml(){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Course map</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>body{margin:0;background:#f7f3ed;font-family:Arial,sans-serif;color:#222}.wrap{max-width:1100px;margin:auto;padding:24px 18px}h1{margin:0 0 4px;color:#b70a0a}p{margin-top:0;color:#555}.card{overflow:hidden;background:#fff;border:1px solid #d8cbc0;border-top:5px solid #b70a0a;border-radius:4px}#map{height:min(68vh,650px);min-height:420px}.summary{padding:12px 16px}.mile-marker,.endpoint-marker{display:flex;align-items:center;justify-content:center;border:2px solid #fff;border-radius:50%;color:#fff;box-shadow:0 1px 4px #555;font:bold 12px Arial}.mile-marker{width:28px;height:28px;background:#fff;border-color:#b70a0a;color:#b70a0a}.endpoint-marker{width:32px;height:32px;font-size:15px}</style></head><body><main class="wrap"><h1 id="event"></h1><p id="course"></p><section class="card"><div id="map"></div><div class="summary"><strong>Course distance:</strong> <span id="distance"></span></div></section></main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><script src="config.js"><\/script><script src="map.js"><\/script></body></html>`}
+      function publicMapJs(){return `const c=window.COURSE_MAP_CONFIG,map=L.map('map'),s=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors'}).addTo(map),t=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'Map data: &copy; OpenStreetMap contributors, SRTM'}),a=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri'});L.control.layers({Streets:s,Topographic:t,Satellite:a}).addTo(map);L.control.scale().addTo(map);document.title=c.eventName+' | Course Map';document.querySelector('#event').textContent=c.eventName;document.querySelector('#course').textContent=c.courseName;const d=(x,y)=>{let r=6371000,k=Math.PI/180,u=(y[0]-x[0])*k,v=(y[1]-x[1])*k,h=Math.sin(u/2)**2+Math.cos(x[0]*k)*Math.cos(y[0]*k)*Math.sin(v/2)**2;return 2*r*Math.asin(Math.sqrt(h))},icon=(v,b,cls='endpoint-marker')=>L.divIcon({className:'',html:'<div class="'+cls+'" style="background:'+b+'">'+v+'</div>',iconSize:cls==='mile-marker'?[28,28]:[32,32],iconAnchor:cls==='mile-marker'?[14,14]:[16,16]}),at=(p,z)=>{let n=0;for(let i=1;i<p.length;i++){let q=d(p[i-1],p[i]);if(n+q>=z){let f=(z-n)/q;return[p[i-1][0]+f*(p[i][0]-p[i-1][0]),p[i-1][1]+f*(p[i][1]-p[i-1][1])]}n+=q}},esc=x=>String(x).replace(/[&<>"']/g,z=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[z]));fetch(c.routeFile).then(r=>r.text()).then(x=>{let p=[...new DOMParser().parseFromString(x,'application/xml').querySelectorAll('trkpt,rtept')].map(n=>[+n.getAttribute('lat'),+n.getAttribute('lon')]).filter(n=>Number.isFinite(n[0])&&Number.isFinite(n[1])),line=L.polyline(p,{color:c.routeColor,weight:6,opacity:.9}).addTo(map),meters=p.slice(1).reduce((q,n,i)=>q+d(p[i],n),0);map.fitBounds(line.getBounds(),{padding:[28,28]});if(d(p[0],p.at(-1))<20)L.marker(p[0],{icon:icon('★','#333')}).addTo(map).bindPopup('<strong>Start / Finish</strong>');else{L.marker(p[0],{icon:icon('▶','#2e7d32')}).addTo(map).bindPopup('<strong>Start</strong>');L.marker(p.at(-1),{icon:icon('■','#111')}).addTo(map).bindPopup('<strong>Finish</strong>')}for(let m=1;m<=Math.floor(meters/1609.344);m++){let z=at(p,m*1609.344);L.marker(z,{icon:icon(m,'#fff','mile-marker')}).addTo(map).bindPopup('<strong>Mile '+m+'</strong>')}(c.markers||[]).forEach(m=>L.marker(m.coordinates,{icon:icon(m.symbol||'●',c.routeColor)}).addTo(map).bindPopup('<strong>'+esc(m.name)+'</strong>'+(m.description?'<br>'+esc(m.description):'')));document.querySelector('#distance').textContent=(meters/1609.344).toFixed(2)+' mi'});`}
+      function parseMeasurementPoints(text) {
+        return text.split('\n').map(line => line.trim()).filter(Boolean).map(line => {
+          const [point, ...rest] = line.split('|');
+          return { point: point.trim(), description: rest.join('|').trim() };
+        }).filter(row => row.point);
+      }
+      function courseDetails() {
+        return {
+          usatf: {
+            certificateNumber: $('certificate-number').value.trim(),
+            effectiveDates: $('effective-dates').value.trim(),
+            measurementDate: $('measurement-date').value.trim(),
+            certifier: $('certifier').value.trim()
+          },
+          measurementPoints: parseMeasurementPoints($('measurement-points').value),
+          elevation: {
+            start: $('elevation-start').value.trim(),
+            finish: $('elevation-finish').value.trim(),
+            highest: $('elevation-highest').value.trim(),
+            lowest: $('elevation-lowest').value.trim()
+          },
+          notes: $('course-notes').value.split('\n').map(note => note.trim()).filter(Boolean)
+        };
+      }
+      function publicMapHtml() { return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Course map</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>body{margin:0;background:#f7f3ed;font-family:Arial,sans-serif;color:#222}.wrap{max-width:1100px;margin:auto;padding:24px 18px}h1{margin:0 0 4px;color:#b70a0a}p{margin-top:0;color:#555}.card,.details-card{overflow:hidden;background:#fff;border:1px solid #d8cbc0;border-top:5px solid #b70a0a;border-radius:4px}.details-card{margin-top:18px;border-top-width:1px}#map{height:min(68vh,650px);min-height:420px}.summary{padding:12px 16px}.mile-marker,.endpoint-marker{display:flex;align-items:center;justify-content:center;border:2px solid #fff;border-radius:50%;color:#fff;box-shadow:0 1px 4px #555;font:bold 12px Arial}.mile-marker{width:28px;height:28px;background:#fff;border-color:#b70a0a;color:#b70a0a}.endpoint-marker{width:32px;height:32px;font-size:15px}.details-card h2{margin:0;padding:18px 18px 8px;color:#b70a0a;font-size:1.25rem}.tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid #d8cbc0;padding:0 12px}.tab{border:0;border-bottom:3px solid transparent;background:transparent;color:#555;padding:11px 12px;cursor:pointer;font-weight:bold}.tab.active{border-bottom-color:#b70a0a;color:#b70a0a}.tab-panel{padding:18px}.tab-panel[hidden]{display:none}.details-table{width:100%;border-collapse:collapse;font-size:.94rem}.details-table th,.details-table td{padding:10px;border-bottom:1px solid #e8dfd8;text-align:left;vertical-align:top}.details-table th{width:32%;color:#555}.notes{margin:0;padding-left:20px;line-height:1.55}@media(max-width:600px){.wrap{padding:16px 0}.wrap>h1,.wrap>p{margin-left:16px;margin-right:16px}#map{height:65vh;min-height:370px}.tab{font-size:.82rem;padding:10px 8px}}</style></head><body><main class="wrap"><h1 id="event"></h1><p id="course"></p><section class="card"><div id="map"></div><div class="summary"><strong>Course distance:</strong> <span id="distance"></span></div></section><section class="details-card"><h2>Course information</h2><div class="tabs" role="tablist"><button class="tab active" role="tab" data-tab="certificate">USATF Certificate</button><button class="tab" role="tab" data-tab="measurements">Measurement Points</button><button class="tab" role="tab" data-tab="elevation">Elevation</button><button class="tab" role="tab" data-tab="notes">Notes &amp; Restrictions</button></div><div class="tab-panel" id="certificate"></div><div class="tab-panel" id="measurements" hidden></div><div class="tab-panel" id="elevation" hidden></div><div class="tab-panel" id="notes" hidden></div></section></main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><script src="config.js"><\/script><script src="map.js"><\/script></body></html>`; }
+      function publicMapJs() { return `const c=window.COURSE_MAP_CONFIG,info=c.courseDetails||{},esc=v=>String(v||'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x])),table=rows=>'<table class="details-table"><tbody>'+rows.map(r=>'<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>').join('')+'</tbody></table>',none='<p>No information has been provided.</p>';document.querySelector('#certificate').innerHTML=table([['Certificate number',info.usatf?.certificateNumber],['Effective dates',info.usatf?.effectiveDates],['Measurement date',info.usatf?.measurementDate],['Certifier',info.usatf?.certifier]]);document.querySelector('#measurements').innerHTML=info.measurementPoints?.length?'<table class="details-table"><thead><tr><th>Point</th><th>Location / description</th></tr></thead><tbody>'+info.measurementPoints.map(r=>'<tr><th>'+esc(r.point)+'</th><td>'+esc(r.description)+'</td></tr>').join('')+'</tbody></table>':none;document.querySelector('#elevation').innerHTML=table([['Start',info.elevation?.start],['Finish',info.elevation?.finish],['Highest point',info.elevation?.highest],['Lowest point',info.elevation?.lowest]]);document.querySelector('#notes').innerHTML=info.notes?.length?'<ul class="notes">'+info.notes.map(n=>'<li>'+esc(n)+'</li>').join('')+'</ul>':none;document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===button));document.querySelectorAll('.tab-panel').forEach(x=>x.hidden=x.id!==button.dataset.tab)}));const map=L.map('map'),s=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors'}),t=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{opacity:.6,attribution:'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap'}),a=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{x}/{y}',{attribution:'Tiles &copy; Esri'});t.addTo(map);L.control.layers({Streets:s,Topographic:t,Satellite:a}).addTo(map);L.control.scale().addTo(map);document.title=c.eventName+' | Course Map';document.querySelector('#event').textContent=c.eventName;document.querySelector('#course').textContent=c.courseName;const d=(x,y)=>{let r=6371000,k=Math.PI/180,u=(y[0]-x[0])*k,v=(y[1]-x[1])*k,h=Math.sin(u/2)**2+Math.cos(x[0]*k)*Math.cos(y[0]*k)*Math.sin(v/2)**2;return 2*r*Math.asin(Math.sqrt(h))},icon=(v,b,cls='endpoint-marker')=>L.divIcon({className:'',html:'<div class="'+cls+'" style="background:'+b+'">'+v+'</div>',iconSize:cls==='mile-marker'?[28,28]:[32,32],iconAnchor:cls==='mile-marker'?[14,14]:[16,16]}),at=(p,z)=>{let n=0;for(let i=1;i<p.length;i++){let q=d(p[i-1],p[i]);if(n+q>=z){let f=(z-n)/q;return[p[i-1][0]+f*(p[i][0]-p[i-1][0]),p[i-1][1]+f*(p[i][1]-p[i-1][1])]}n+=q}};fetch(c.routeFile).then(r=>r.text()).then(x=>{let p=[...new DOMParser().parseFromString(x,'application/xml').querySelectorAll('trkpt,rtept')].map(n=>[+n.getAttribute('lat'),+n.getAttribute('lon')]).filter(n=>Number.isFinite(n[0])&&Number.isFinite(n[1])),line=L.polyline(p,{color:c.routeColor,weight:6,opacity:.9}).addTo(map),meters=p.slice(1).reduce((q,n,i)=>q+d(p[i],n),0);map.fitBounds(line.getBounds(),{padding:[28,28]});if(d(p[0],p.at(-1))<20)L.marker(p[0],{icon:icon('★','#333')}).addTo(map).bindPopup('<strong>Start / Finish</strong>');else{L.marker(p[0],{icon:icon('▶','#2e7d32')}).addTo(map).bindPopup('<strong>Start</strong>');L.marker(p.at(-1),{icon:icon('■','#111')}).addTo(map).bindPopup('<strong>Finish</strong>')}for(let m=1;m<=Math.floor(meters/1609.344);m++){let z=at(p,m*1609.344);L.marker(z,{icon:icon(m,'#fff','mile-marker')}).addTo(map).bindPopup('<strong>Mile '+m+'</strong>')}(c.markers||[]).forEach(m=>L.marker(m.coordinates,{icon:icon(m.symbol||'●',c.routeColor)}).addTo(map).bindPopup('<strong>'+esc(m.name)+'</strong>'+(m.description?'<br>'+esc(m.description):'')));document.querySelector('#distance').textContent=(meters/1609.344).toFixed(2)+' mi'});`; }
+      $('download').onclick = async () => {
+        if (!state.gpxText || state.route.length < 2) { setStatus('Select a valid GPX route before downloading.'); return; }
+        const zip = new JSZip(), folder = zip.folder('course-map');
+        const config = { eventName:$('event-name').value.trim()||'My Race', courseName:$('course-name').value.trim()||'Course', routeFile:'route.gpx', routeColor:$('route-color').value, markers:state.markers, courseDetails:courseDetails() };
+        folder.file('index.html', publicMapHtml()); folder.file('map.js', publicMapJs()); folder.file('config.js', 'window.COURSE_MAP_CONFIG = ' + JSON.stringify(config, null, 2) + ';'); folder.file('route.gpx', state.gpxText);
+        folder.file('README.md', 'Upload this entire course-map folder beside the race website index.html. Add: <a href="course-map/">View interactive course map</a>');
+        const blob = await zip.generateAsync({type:'blob'}), link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'course-map.zip'; link.click(); URL.revokeObjectURL(link.href); setStatus('Your course-map ZIP is ready.', true);
+      };
+    })();
+  </script>
+</body>
+</html>

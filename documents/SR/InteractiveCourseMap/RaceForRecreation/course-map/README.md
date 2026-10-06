@@ -1,0 +1,1 @@
+Upload this entire course-map folder beside the race website index.html. Add: <a href="course-map/">View interactive course map</a>
