@@ -13,7 +13,7 @@ permalink: /projects/
   <article class="projects-card">
     <h3 class="project-title">Interactive Road Race Map</h3>
     <p class="project-text">With supporting text below as a natural lead-in to additional content.</p>
-    <a href="/projects/SR_map/" class="project-btn">Go somewhere</a>
+    <a href="/projects/map_builder/" class="project-btn">Go somewhere</a>
   </article>
 </div>
 
