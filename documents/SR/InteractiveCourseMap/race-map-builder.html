@@ -6,10 +6,14 @@
   <title>Strictly Running Course Map Builder</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
-    :root { --brand:black; --paper:white; --line:white; --ink:#222; }
+    :root { --brand:black; --paper:white; --line:black; --ink:#222; }
     * { box-sizing:border-box; }
     body { margin:0; background:var(--paper); color:var(--ink); font-family:Arial,Helvetica,sans-serif; }
-    header { padding:24px max(18px,calc((100vw - 1220px)/2)); background:#fff; border-bottom:5px solid var(--brand); }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 24px max(18px, calc((100vw - 1220px) / 2)); background: white; border-bottom: 5px solid var(--brand); }
+    .header-text { flex: 1; }
+    .header-logo { position: static; flex: 0 0 100px; width: 150px; height: 100px; object-fit: contain; margin: 0; }
+    footer { margin-top: 24px; padding: 18px; background: #ffffff; border-top: 1px solid var(--line); color: #666666; font-size: 0.85rem; text-align: center; }
+    @media(max-width:650px) {.header-logo{position:static; display:block; margin:18px auto 0;}}
     h1 { margin:0 0 6px; color:var(--brand); font-size:clamp(1.55rem,3vw,2.2rem); }
     header p { margin:0; color:#555; }
     .layout { display:grid; grid-template-columns:360px minmax(0,1fr); gap:20px; max-width:1220px; margin:0 auto; padding:20px 18px 36px; }
@@ -18,7 +22,7 @@
     h2 { margin:0 0 12px; color:var(--brand); font-size:1.15rem; }
     h3 { margin:18px 0 8px; padding-top:17px; border-top:1px solid #eadfd8; font-size:1rem; }
     label { display:block; margin:0 0 5px; font-size:.88rem; font-weight:bold; }
-    input,textarea,select { width:100%; margin:0 0 12px; padding:9px 10px; border:1px solid #b9aaa0; border-radius:3px; background:#fff; font:inherit; font-size:.93rem; }
+    input,textarea,select { width:100%; margin:0 0 12px; padding:9px 10px; border:1px solid black; border-radius:3px; background:#fff; font:inherit; font-size:.93rem; }
     textarea { min-height:66px; resize:vertical; }
     input[type=color] { height:40px; padding:3px; }
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -39,17 +43,39 @@
   </style>
 </head>
 <body>
-  <header><h1>Strictly Running Course Map Builder</h1><p>Upload a GPX route, add custom locations, and download an upload-ready interactive course map.</p></header>
+<header>
+  <div class="header-text">
+    <h1>Strictly Running Course Map Builder</h1>
+    <p>1. Upload a route in GPX format.</p>
+    <p>2. Add additional points, like water stops.</p>
+    <p>3. Fill out the course details, including USATF certificate information if applicable.</p>
+    <p>4. Download an website-ready interactive course map.</p>
+  </div>
+  <img
+    class="header-logo"
+    src="/assets/images/SR/SR_timing.jpg"
+    alt="Strictly Running logo"
+    caption="Strictly Running logo">
+</header>
   <main class="layout">
     <aside class="panel">
-      <h2>1. Course details</h2>
+      <h2>1. Course route</h2>
       <label for="gpx-file">GPX route file</label><input id="gpx-file" type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml">
       <p class="help">MapMyRun: Download → GPX.</p>
-      <label for="event-name">Race/event name</label><input id="event-name" value="My Race">
-      <label for="course-name">Course name</label><input id="course-name" value="5K Course">
+      <label for="event-name">Event Name</label><input id="event-name" value="My Race">
+      <label for="course-name">Distance</label><input id="course-name" value="5K Course">
       <label for="route-color">Route color</label><input id="route-color" type="color" value="#b70a0a">
       <div class="button-row"><button id="refresh-map" type="button">Update preview</button><button id="clear-markers" class="secondary" type="button">Clear custom markers</button></div>
-      <h3>2. Course information</h3>
+      <h3>2. Add custom markers (optional)</h3>
+      <p class="help">Start, finish, and whole-mile marks are automatic. Click the map for a custom location.</p>
+      <label for="marker-type">Marker type</label>
+      <select id="marker-type"><option value="📍">General location</option><option value="💧">Water stop</option><option value="P">Parking</option><option value="🚻">Restroom</option></select>
+      <label for="marker-name">Marker label</label><input id="marker-name" placeholder="e.g., Packet pickup">
+      <label for="marker-description">Short description <span style="font-weight:normal">(optional)</span></label><textarea id="marker-description" placeholder="e.g., Opens at 6:30 a.m."></textarea>
+      <div class="two-col"><div><label for="marker-lat">Latitude</label><input id="marker-lat" type="number" step="any" placeholder="Click map"></div><div><label for="marker-lng">Longitude</label><input id="marker-lng" type="number" step="any" placeholder="Click map"></div></div>
+      <button id="add-marker" type="button">Add marker</button>
+      <h3>Custom markers</h3><ul id="marker-list" class="marker-list"><li class="empty">No custom markers added yet.</li></ul>
+      <h3>3. Course information</h3>
       <label for="certificate-number">USATF certificate number</label><input id="certificate-number" placeholder="e.g., SC24012BW">
       <label for="effective-dates">Certificate effective dates</label><input id="effective-dates" placeholder="e.g., January 1, 2024–December 31, 2034">
       <label for="measurement-date">Measurement date</label><input id="measurement-date" placeholder="e.g., November 10, 2023">
@@ -58,16 +84,7 @@
       <div class="two-col"><div><label for="elevation-start">Start elevation</label><input id="elevation-start" placeholder="e.g., 312 ft"></div><div><label for="elevation-finish">Finish elevation</label><input id="elevation-finish" placeholder="e.g., 312 ft"></div></div>
       <div class="two-col"><div><label for="elevation-highest">Highest elevation</label><input id="elevation-highest" placeholder="e.g., 356 ft"></div><div><label for="elevation-lowest">Lowest elevation</label><input id="elevation-lowest" placeholder="e.g., 298 ft"></div></div>
       <label for="course-notes">Notes &amp; restrictions</label><textarea id="course-notes" placeholder="One note or restriction per line"></textarea>
-      <h3>3. Add a custom marker</h3>
-      <p class="help">Start, finish, and whole-mile marks are automatic. Click the map for a custom location.</p>
-      <label for="marker-type">Marker type</label>
-      <select id="marker-type"><option value="📍">General location</option><option value="💧">Water stop</option><option value="P">Parking</option><option value="🚻">Restroom</option><option value="⚠">Caution / road closure</option></select>
-      <label for="marker-name">Marker label</label><input id="marker-name" placeholder="e.g., Packet pickup">
-      <label for="marker-description">Short description <span style="font-weight:normal">(optional)</span></label><textarea id="marker-description" placeholder="e.g., Opens at 6:30 a.m."></textarea>
-      <div class="two-col"><div><label for="marker-lat">Latitude</label><input id="marker-lat" type="number" step="any" placeholder="Click map"></div><div><label for="marker-lng">Longitude</label><input id="marker-lng" type="number" step="any" placeholder="Click map"></div></div>
-      <button id="add-marker" type="button">Add marker</button>
-      <h3>Custom markers</h3><ul id="marker-list" class="marker-list"><li class="empty">No custom markers added yet.</li></ul>
-      <h3>4. Download</h3><p id="status" class="status">Choose a GPX route to begin.</p><button id="download" class="download" type="button">Download course-map ZIP</button>
+      <h3>4. Download</h3><p id="status" class="status">Choose a GPX route to begin.</p><p>The generated course map will be a self-contained HTML file that can be uploaded to the race website just like any other image or PDF.</p><button id="download" class="download" type="button">Download course-map ZIP</button>
     </aside>
     <section class="map-card"><div id="map"></div><div class="map-footer" id="distance">No route loaded</div></section>
   </main>
@@ -148,5 +165,7 @@
       };
     })();
   </script>
+  <header>
+<footer>Written by Graham C. McLaughlin</footer>
 </body>
 </html>
